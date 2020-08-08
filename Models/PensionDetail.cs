@@ -36,4 +36,10 @@ namespace Pension_Management_Portal.Models
         Self = 1,
         Family = 2
     }
+    public class Result
+    {
+        public string message { get; set; }
+        public PensionDetail result { get; set; }
+
+    }
 }

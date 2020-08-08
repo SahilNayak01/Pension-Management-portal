@@ -19,6 +19,7 @@ namespace Pension_Management_Portal.Controllers
         static string token;
         PensionDetail penDetailObj = new PensionDetail();
         private readonly DataContext _context;
+        static readonly log4net.ILog _log4net = log4net.LogManager.GetLogger(typeof(HomeController));
         private IConfiguration configuration;
         /// <summary>
         /// Dependency Injection
@@ -41,6 +42,7 @@ namespace Pension_Management_Portal.Controllers
         [HttpGet]
         public IActionResult Login()
         {
+            _log4net.Info("Login page is Invoked!!");
             return View();
         }
         /// <summary>
@@ -55,15 +57,18 @@ namespace Pension_Management_Portal.Controllers
             token = GetToken(tokenValue, user);
             if (token=="abcd")
             {
+                _log4net.Error("Authenticate Microservice is Down!!");
                 ViewBag.loginerror = "Error Occured";
                 return View();
             }
             if (token != null)
             {
+                _log4net.Info("Login is Done!!");
                 return RedirectToAction("PensionerValues");
             }
             else
             {
+                _log4net.Warn("Invalid Credientails are given by Admin!!");
                 ViewBag.invalid = "UserName or Password invalid";
                 return View();
             }
@@ -97,7 +102,7 @@ namespace Pension_Management_Portal.Controllers
         [HttpGet]
         public IActionResult PensionerValues()
         {
-
+            _log4net.Info("Admin is giving the Pensioner Details!!");
             return View();
         }
 
@@ -129,12 +134,13 @@ namespace Pension_Management_Portal.Controllers
                         using (var response = await client.PostAsync("api/ProcessPension/ProcessPension", content))    //Get Post Mai check kar lena
                         {
                             string apiResponse = await response.Content.ReadAsStringAsync();
-                            penDetailObj = JsonConvert.DeserializeObject<PensionDetail>(apiResponse);
-
+                            Result res = JsonConvert.DeserializeObject<Result>(apiResponse);
+                            penDetailObj = res.result;
                         }
                     }
                     catch(Exception e)
                     {
+                        _log4net.Error("Some Microservice is Down!!");
                         penDetailObj = null;
                     }
 
@@ -142,23 +148,27 @@ namespace Pension_Management_Portal.Controllers
 
                 if (penDetailObj == null)
                 {
+                    _log4net.Error("Some Microservice is Down!!");
                     ViewBag.erroroccured = "Some Error Occured";
                     return View();
                 }
                 if(penDetailObj.Status.Equals(20))
                 {
+                    _log4net.Error("Some Microservice is Down!!");
                     ViewBag.erroroccured = "Some Error Occured";
                     return View();
                 }
                 if (penDetailObj.Status.Equals(10))
                 {
                     // Storing the Values in Database
+                    _log4net.Info("Pensioner details have been matched with the Csv and data is successfully saved in local Database!!");
                     _context.pensionDetails.Add(penDetailObj);
                     _context.SaveChanges();
                     return RedirectToAction("PensionervaluesDisplayed", penDetailObj);
                 }
                 else
                 {
+                    _log4net.Error("Persioner details does not match with the Csv!!");
                     ViewBag.notmatch = "Pensioner Values not match";
                     return View();
                 }
@@ -167,6 +177,7 @@ namespace Pension_Management_Portal.Controllers
 
             else
             {
+                _log4net.Warn("Proper details are not given by the Admin!!");
                 ViewBag.invalid = "Pensioner Values are Invalid";
                 return View();
             }
@@ -180,7 +191,7 @@ namespace Pension_Management_Portal.Controllers
         [HttpGet]
         public IActionResult PensionervaluesDisplayed(PensionDetail penObj)
         {
-            
+            _log4net.Info("Pension Amount of Pensioner is Displayed!!");
             return View(penObj);
 
 
